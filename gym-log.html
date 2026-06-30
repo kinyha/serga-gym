@@ -1,0 +1,426 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#121010">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ЖЕЛЕЗО">
+<title>ЖЕЛЕЗО — журнал тренировок</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#121010;
+    --bg2:#171412;
+    --surface:#1D1815;
+    --surface-2:#241D18;
+    --surface-3:#2B221B;
+    --line:#382C23;
+    --line-soft:#2A201A;
+    --text:#F7F0E7;
+    --muted:#9E9082;
+    --ghost:#6C5E51;
+    --accent:#FF7A33;
+    --accent-2:#FF9A4D;
+    --accent-deep:#B8470F;
+    --accent-dim:rgba(255,122,51,.14);
+    --good:#5FD08A;
+    --danger:#D45A3E;
+    --display:"Archivo","Arial Narrow",system-ui,sans-serif;
+    --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;margin:0;overflow:hidden}
+  body{
+    font-family:var(--sans);color:var(--text);background:var(--bg);
+    -webkit-font-smoothing:antialiased;font-size:16px;line-height:1.45;
+  }
+  ::selection{background:var(--accent);color:#1b0f06}
+
+  /* ---- stage / phone frame (desktop). On phones it's just full-screen ---- */
+  .stage{height:100%}
+  .device{height:100%}
+  .screen{position:relative;height:100dvh;height:100vh;overflow:hidden;
+    background:linear-gradient(180deg,var(--bg),var(--bg2))}
+  .notch{display:none}
+  .scroll{position:absolute;inset:0;overflow-y:auto;-webkit-overflow-scrolling:touch;
+    padding:calc(env(safe-area-inset-top) + 14px) 16px calc(92px + env(safe-area-inset-bottom))}
+  .scroll::-webkit-scrollbar{width:0;height:0}
+
+  @media(min-width:600px){
+    html,body{overflow:auto}
+    body{background:
+      radial-gradient(120% 80% at 50% -10%, rgba(255,122,51,.10), transparent 60%),
+      #0A0A0B;}
+    .stage{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:30px}
+    .device{height:auto;padding:13px;border-radius:56px;
+      background:linear-gradient(160deg,#222,#060607 70%);
+      box-shadow:0 50px 90px -20px rgba(0,0,0,.7), inset 0 0 0 1px rgba(255,255,255,.07);}
+    .screen{width:392px;height:840px;border-radius:44px;
+      box-shadow:inset 0 0 0 2px #000, 0 0 0 1px rgba(255,255,255,.04)}
+    .notch{display:block;position:absolute;top:11px;left:50%;transform:translateX(-50%);
+      width:118px;height:30px;background:#000;border-radius:18px;z-index:40}
+    .scroll{padding-top:50px}
+  }
+
+  /* ---- header ---- */
+  .top{display:flex;align-items:center;justify-content:space-between;padding:2px 2px 16px}
+  .brand{font-family:var(--display);font-weight:900;font-size:20px;letter-spacing:1.5px;line-height:1}
+  .brand .b{color:var(--accent)}
+  .brand small{display:block;font-family:var(--sans);font-weight:600;font-size:10px;
+    letter-spacing:2.5px;color:var(--ghost);margin-top:4px}
+  .streak{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--muted);
+    background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:6px 11px;white-space:nowrap}
+  .streak b{color:var(--accent)}
+
+  /* ---- date bar ---- */
+  .datebar{position:relative;display:flex;align-items:center;gap:12px;
+    background:linear-gradient(180deg,var(--surface),var(--bg2));
+    border:1px solid var(--line);border-radius:18px;padding:14px 16px;margin-bottom:18px;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.04)}
+  .datebar .cal{display:flex;align-items:center;justify-content:center;width:42px;height:42px;
+    border-radius:12px;background:var(--accent-dim);color:var(--accent);flex:none}
+  .datebar .cal svg{width:21px;height:21px}
+  .datebar .meta{flex:1;min-width:0}
+  .datebar .lbl{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+  .datebar .val{font-family:var(--mono);font-weight:800;font-size:19px;letter-spacing:-.3px}
+  .datebar input[type=date]{position:absolute;inset:0;width:100%;height:100%;opacity:0;border:0;cursor:pointer}
+  .datebar .chev{color:var(--ghost)}
+
+  /* ---- add exercise ---- */
+  .addrow{display:flex;gap:9px;margin-bottom:18px}
+  .addrow input[type=text]{flex:1;background:var(--surface);border:1px solid var(--line);
+    color:var(--text);border-radius:14px;padding:14px 15px;font-size:16px;font-family:var(--sans)}
+  .addrow input::placeholder{color:var(--ghost)}
+  .addrow input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
+  .btn-add{flex:none;width:52px;background:linear-gradient(160deg,var(--accent-2),var(--accent-deep));
+    color:#1b0f06;border:0;border-radius:14px;font-weight:800;font-size:26px;line-height:1;cursor:pointer;
+    box-shadow:0 6px 16px -4px rgba(255,122,51,.5)}
+  .btn-add:active{transform:translateY(1px)}
+
+  /* ---- exercise card ---- */
+  .card{background:linear-gradient(180deg,var(--surface),#191410);
+    border:1px solid var(--line);border-radius:20px;padding:16px;margin-bottom:16px;
+    box-shadow:0 18px 30px -22px rgba(0,0,0,.8), inset 0 1px 0 rgba(255,255,255,.04)}
+  .card-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+  .card-head h2{margin:0;font-family:var(--display);font-weight:800;font-size:19px;letter-spacing:.2px;flex:1;min-width:0;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .pr{font-family:var(--mono);font-weight:800;font-size:11px;color:var(--good);
+    background:rgba(95,208,138,.12);border:1px solid rgba(95,208,138,.25);border-radius:999px;padding:4px 8px;white-space:nowrap}
+  .card-head .kill{flex:none;background:transparent;border:0;color:var(--ghost);font-size:17px;cursor:pointer;padding:4px 2px;line-height:1}
+  .card-head .kill:active{color:var(--danger)}
+
+  .last{font-family:var(--mono);font-size:13px;color:var(--muted);margin:0 0 14px;
+    padding:10px 12px;background:var(--bg2);border-radius:12px;border:1px solid var(--line-soft)}
+  .last .h{display:block;font-size:9.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--ghost);margin-bottom:4px}
+  .last .none{color:var(--ghost)}
+
+  .colhead{display:grid;grid-template-columns:32px 1fr 1fr 28px;gap:9px;
+    padding:0 2px 8px;font-size:9.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
+  .colhead span:first-child{text-align:center}
+  .colhead span:nth-child(2),.colhead span:nth-child(3){text-align:center}
+
+  .setrow{display:grid;grid-template-columns:32px 1fr 1fr 28px;gap:9px;align-items:center;margin-bottom:9px}
+  .setno{font-family:var(--mono);font-weight:800;font-size:15px;text-align:center;color:var(--accent)}
+  .field{position:relative}
+  .field input{width:100%;background:var(--surface-2);border:1px solid var(--line);
+    color:var(--text);border-radius:13px;padding:14px 12px;font-size:19px;font-weight:700;
+    font-family:var(--mono);text-align:center;letter-spacing:-.5px}
+  .field input:focus{outline:none;border-color:var(--accent);background:var(--surface-3);
+    box-shadow:0 0 0 3px var(--accent-dim)}
+  .field input::placeholder{color:var(--ghost);font-weight:600}
+  .field .unit{position:absolute;right:10px;top:50%;transform:translateY(-50%);
+    font-size:10px;color:var(--ghost);font-family:var(--mono);pointer-events:none}
+  .rmset{background:transparent;border:0;color:var(--ghost);font-size:19px;cursor:pointer;line-height:1;padding:6px 2px}
+  .rmset:active{color:var(--danger)}
+
+  .addset{width:100%;margin-top:6px;background:transparent;border:1px dashed var(--line);
+    color:var(--muted);border-radius:13px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;
+    letter-spacing:.3px;font-family:var(--sans)}
+  .addset:active{border-color:var(--accent);color:var(--accent)}
+
+  /* ---- empty ---- */
+  .empty{text-align:center;color:var(--muted);padding:54px 18px;font-size:15px;line-height:1.6}
+  .empty .em-ic{font-size:34px;display:block;margin-bottom:12px;filter:grayscale(.2);opacity:.85}
+
+  /* ---- history ---- */
+  .seg{display:flex;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:4px;margin-bottom:18px}
+  .seg button{flex:1;background:transparent;border:0;color:var(--muted);font-size:14px;font-weight:700;
+    padding:11px;border-radius:10px;cursor:pointer;font-family:var(--sans)}
+  .seg button.on{background:var(--accent-dim);color:var(--accent)}
+
+  .hgroup{margin-bottom:20px}
+  .hdate{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;
+    color:var(--muted);margin:0 2px 9px;display:flex;align-items:center;gap:10px}
+  .hdate::after{content:"";flex:1;height:1px;background:var(--line-soft)}
+  .hitem{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:9px}
+  .hitem .hx{font-family:var(--display);font-weight:700;font-size:15px;margin-bottom:4px}
+  .hitem .hs{font-family:var(--mono);font-size:13px;color:var(--muted);line-height:1.5}
+
+  select.exsel{width:100%;background:var(--surface);border:1px solid var(--line);color:var(--text);
+    border-radius:14px;padding:14px 13px;font-size:16px;margin-bottom:16px;font-family:var(--sans);
+    appearance:none;-webkit-appearance:none;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%239E9082' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><path d='M6 9l6 6 6-6'/></svg>");
+    background-repeat:no-repeat;background-position:right 14px center}
+  select.exsel:focus{outline:none;border-color:var(--accent)}
+
+  .spark{display:flex;align-items:flex-end;gap:5px;height:96px;padding:14px;
+    background:linear-gradient(180deg,var(--surface),var(--bg2));border:1px solid var(--line);border-radius:16px;margin-bottom:7px}
+  .spark .bar{flex:1;background:linear-gradient(180deg,var(--accent-2),var(--accent-deep));
+    border-radius:5px 5px 2px 2px;min-height:5px}
+  .spark .bar:last-child{background:linear-gradient(180deg,#FFF1E6,var(--accent))}
+  .spark-cap{font-family:var(--mono);font-size:11px;color:var(--ghost);text-align:center;margin-bottom:18px}
+
+  .tools{display:flex;gap:9px;margin-top:30px;padding-top:18px;border-top:1px solid var(--line-soft)}
+  .tools button{flex:1;background:var(--surface);border:1px solid var(--line);color:var(--muted);
+    border-radius:13px;padding:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans)}
+  .tools button:active{border-color:var(--accent);color:var(--accent)}
+
+  /* ---- bottom nav (anchored to phone screen) ---- */
+  .nav{position:absolute;left:0;right:0;bottom:0;z-index:30;
+    background:linear-gradient(180deg,rgba(18,16,16,.4),rgba(18,16,16,.96));
+    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    border-top:1px solid var(--line);
+    padding:9px 0 calc(10px + env(safe-area-inset-bottom));display:flex}
+  .nav button{flex:1;background:transparent;border:0;color:var(--muted);
+    display:flex;flex-direction:column;align-items:center;gap:4px;
+    font-size:11px;font-weight:700;letter-spacing:.3px;cursor:pointer;padding:4px;font-family:var(--sans)}
+  .nav button svg{width:23px;height:23px}
+  .nav button.on{color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="stage"><div class="device"><div class="screen">
+  <div class="notch"></div>
+  <div class="scroll" id="scroll">
+    <div class="top">
+      <div class="brand">ЖЕЛЕ<span class="b">З</span>О<small>ЖУРНАЛ ТРЕНИРОВОК</small></div>
+      <div class="streak" id="streak"></div>
+    </div>
+    <div id="view"></div>
+  </div>
+  <nav class="nav">
+    <button id="nav-w" class="on" data-view="workout">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 7v10M17.5 7v10M3.5 9.5v5M20.5 9.5v5M6.5 12h11"/></svg>
+      Тренировка
+    </button>
+    <button id="nav-h" data-view="history">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18M7 14l3.5-4 3 3L21 7"/></svg>
+      История
+    </button>
+  </nav>
+</div></div></div>
+
+<datalist id="ex-suggest"></datalist>
+
+<script>
+(function(){
+  "use strict";
+  var KEY="gymlog.v1";
+  var MON=["янв","фев","мар","апр","май","июн","июл","авг","сен","окт","ноя","дек"];
+  var WD=["вс","пн","вт","ср","чт","пт","сб"];
+
+  function load(){try{var r=localStorage.getItem(KEY);if(r)return JSON.parse(r);}catch(e){}return {exercises:[],sessions:[]};}
+  function save(){try{localStorage.setItem(KEY,JSON.stringify(DB));}catch(e){}}
+  var DB=load();
+  if(!Array.isArray(DB.exercises))DB.exercises=[];
+  if(!Array.isArray(DB.sessions))DB.sessions=[];
+
+  var S={view:"workout",date:todayISO(),hmode:"byDate",hex:""};
+
+  function todayISO(){var d=new Date();return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate());}
+  function p(n){return n<10?"0"+n:""+n;}
+  function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+  function esc(s){return String(s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
+  function dt(iso){var x=iso.split("-");return new Date(+x[0],+x[1]-1,+x[2]);}
+  function fmt(iso){var d=dt(iso);return d.getDate()+" "+MON[d.getMonth()]+" "+d.getFullYear();}
+  function fmtShort(iso){var d=dt(iso);return WD[d.getDay()]+", "+d.getDate()+" "+MON[d.getMonth()];}
+  function num(n){return Number.isInteger(n)?n:Math.round(n*100)/100;}
+
+  function getSession(date,ex){for(var i=0;i<DB.sessions.length;i++){var s=DB.sessions[i];if(s.date===date&&s.exercise===ex)return s;}return null;}
+  function ensureSession(date,ex){var s=getSession(date,ex);if(s)return s;
+    s={id:uid(),date:date,exercise:ex,sets:[blank(),blank(),blank(),blank()]};
+    DB.sessions.push(s);if(DB.exercises.indexOf(ex)<0)DB.exercises.push(ex);save();return s;}
+  function blank(){return {w:"",r:""};}
+  function filled(x){return (x.w!==""&&x.w!=null)||(x.r!==""&&x.r!=null);}
+  function sessionsForDate(d){return DB.sessions.filter(function(s){return s.date===d;});}
+  function lastSession(ex,before){var best=null;for(var i=0;i<DB.sessions.length;i++){var s=DB.sessions[i];
+    if(s.exercise!==ex)continue;if(before&&s.date>=before)continue;if(!s.sets.some(filled))continue;
+    if(!best||s.date>best.date)best=s;}return best;}
+  function setsSummary(sets){return sets.filter(filled).map(function(x){
+    var w=(x.w===""||x.w==null)?"—":x.w;var r=(x.r===""||x.r==null)?"—":x.r;return w+"×"+r;}).join("  ·  ");}
+  function topSet(s){var m=null;s.sets.forEach(function(x){var w=parseFloat(x.w);if(!isNaN(w)&&(m==null||w>m))m=w;});return m;}
+  function findSession(id){for(var i=0;i<DB.sessions.length;i++)if(DB.sessions[i].id===id)return DB.sessions[i];return null;}
+  function plural(n,f){var a=n%10,b=n%100;if(a===1&&b!==11)return f[0];if(a>=2&&a<=4&&(b<10||b>=20))return f[1];return f[2];}
+
+  var view=document.getElementById("view");
+
+  function render(){
+    document.getElementById("nav-w").classList.toggle("on",S.view==="workout");
+    document.getElementById("nav-h").classList.toggle("on",S.view==="history");
+    refreshSuggest();
+    if(S.view==="workout")renderWorkout();else renderHistory();
+    renderStreak();
+    document.getElementById("scroll").scrollTop=0;
+  }
+  function refreshSuggest(){
+    document.getElementById("ex-suggest").innerHTML=DB.exercises.slice().sort().map(function(n){return '<option value="'+esc(n)+'">';}).join("");
+  }
+  function renderStreak(){
+    var days={};DB.sessions.forEach(function(s){if(s.sets.some(filled))days[s.date]=1;});
+    var n=Object.keys(days).length;
+    var el=document.getElementById("streak");
+    el.innerHTML=n?'<b>'+n+'</b> '+plural(n,["тренировка","тренировки","тренировок"]):'';
+    el.style.display=n?"":"none";
+  }
+
+  /* ---- workout ---- */
+  function renderWorkout(){
+    var date=S.date,html="";
+    html+='<div class="datebar">'
+      +'<span class="cal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="17" rx="3"/><path d="M16 2.5v4M8 2.5v4M3 10h18"/></svg></span>'
+      +'<span class="meta"><span class="lbl">Дата тренировки</span><span class="val">'+esc(fmt(date))+'</span></span>'
+      +'<span class="chev"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span>'
+      +'<input type="date" id="datein" value="'+esc(date)+'">'
+      +'</div>';
+    html+='<div class="addrow">'
+      +'<input type="text" id="exname" list="ex-suggest" placeholder="Название упражнения" autocomplete="off" enterkeyhint="done">'
+      +'<button class="btn-add" id="exadd" aria-label="Добавить">+</button>'
+      +'</div>';
+    var list=sessionsForDate(date);
+    if(!list.length){
+      html+='<div class="empty"><span class="em-ic">🏋️</span>На эту дату пока пусто.<br>Добавь упражнение сверху.</div>';
+    }else{list.forEach(function(s){html+=cardHTML(s);});}
+    view.innerHTML=html;
+    wireWorkout();
+    list.forEach(function(s){updatePR(s.id);});
+  }
+
+  function cardHTML(s){
+    var last=lastSession(s.exercise,s.date),lastHtml;
+    if(last){lastHtml='<div class="last"><span class="h">Прошлый раз · '+esc(fmt(last.date))+'</span>'+esc(setsSummary(last.sets)||"—")+'</div>';}
+    else{lastHtml='<div class="last"><span class="none">Прошлых записей нет — это первый раз.</span></div>';}
+    var rows="";
+    s.sets.forEach(function(set,i){
+      var ph=last&&last.sets[i]?last.sets[i]:{w:"",r:""};
+      rows+='<div class="setrow" data-sid="'+s.id+'" data-i="'+i+'">'
+        +'<div class="setno">'+(i+1)+'</div>'
+        +'<div class="field"><input inputmode="decimal" data-f="w" value="'+esc(set.w)+'" placeholder="'+esc(ph.w||"")+'"><span class="unit">кг</span></div>'
+        +'<div class="field"><input inputmode="numeric" data-f="r" value="'+esc(set.r)+'" placeholder="'+esc(ph.r||"")+'"><span class="unit">повт</span></div>'
+        +'<button class="rmset" aria-label="Убрать">×</button>'
+        +'</div>';
+    });
+    return '<div class="card" data-sid="'+s.id+'">'
+      +'<div class="card-head"><h2>'+esc(s.exercise)+'</h2><span class="pr" data-pr hidden></span><button class="kill" aria-label="Убрать упражнение">🗑</button></div>'
+      +lastHtml
+      +'<div class="colhead"><span>#</span><span>Вес</span><span>Повторы</span><span></span></div>'
+      +rows
+      +'<button class="addset">+ подход</button>'
+      +'</div>';
+  }
+
+  function updatePR(sid){
+    var s=findSession(sid);if(!s)return;
+    var card=view.querySelector('.card[data-sid="'+sid+'"]');if(!card)return;
+    var badge=card.querySelector('.pr');var last=lastSession(s.exercise,s.date);var t=topSet(s);
+    if(last&&t!=null){var lt=topSet(last);
+      if(lt!=null&&t>lt){badge.hidden=false;badge.textContent="▲ +"+num(t-lt)+" кг";return;}}
+    badge.hidden=true;
+  }
+
+  function wireWorkout(){
+    var di=document.getElementById("datein");
+    di.addEventListener("change",function(){if(di.value){S.date=di.value;render();}});
+    function addEx(){var inp=document.getElementById("exname");var name=(inp.value||"").trim();
+      if(!name)return;ensureSession(S.date,name);inp.value="";render();}
+    document.getElementById("exadd").addEventListener("click",addEx);
+    document.getElementById("exname").addEventListener("keydown",function(e){if(e.key==="Enter")addEx();});
+
+    view.querySelectorAll(".setrow input").forEach(function(inp){
+      inp.addEventListener("input",function(){
+        var row=inp.closest(".setrow");var s=findSession(row.getAttribute("data-sid"));if(!s)return;
+        var i=+row.getAttribute("data-i");if(!s.sets[i])return;
+        s.sets[i][inp.getAttribute("data-f")]=inp.value;save();updatePR(s.id);
+      });
+    });
+    view.querySelectorAll(".addset").forEach(function(b){
+      b.addEventListener("click",function(){var s=findSession(b.closest(".card").getAttribute("data-sid"));
+        if(s){s.sets.push(blank());save();renderWorkout();}});
+    });
+    view.querySelectorAll(".rmset").forEach(function(b){
+      b.addEventListener("click",function(){var row=b.closest(".setrow");var s=findSession(row.getAttribute("data-sid"));
+        if(s){s.sets.splice(+row.getAttribute("data-i"),1);save();renderWorkout();}});
+    });
+    view.querySelectorAll(".kill").forEach(function(b){
+      b.addEventListener("click",function(){var id=b.closest(".card").getAttribute("data-sid");
+        var idx=DB.sessions.findIndex(function(x){return x.id===id;});
+        if(idx>=0){DB.sessions.splice(idx,1);save();renderWorkout();}});
+    });
+  }
+
+  /* ---- history ---- */
+  function renderHistory(){
+    var html='<div class="seg">'
+      +'<button data-m="byDate" class="'+(S.hmode==="byDate"?"on":"")+'">По датам</button>'
+      +'<button data-m="byExercise" class="'+(S.hmode==="byExercise"?"on":"")+'">По упражнению</button>'
+      +'</div>';
+    html+=S.hmode==="byDate"?historyByDate():historyByExercise();
+    html+='<div class="tools"><button id="exp">Экспорт JSON</button><button id="imp">Импорт</button></div>'
+      +'<input type="file" id="impfile" accept="application/json" style="display:none">';
+    view.innerHTML=html;wireHistory();
+  }
+  function historyByDate(){
+    var wd=DB.sessions.filter(function(s){return s.sets.some(filled);});
+    if(!wd.length)return '<div class="empty"><span class="em-ic">📭</span>Истории пока нет.<br>Запиши первую тренировку.</div>';
+    var dates=Array.from(new Set(wd.map(function(s){return s.date;}))).sort().reverse(),out="";
+    dates.forEach(function(d){out+='<div class="hgroup"><div class="hdate">'+esc(fmtShort(d))+' '+dt(d).getFullYear()+'</div>';
+      wd.filter(function(s){return s.date===d;}).forEach(function(s){
+        out+='<div class="hitem"><div class="hx">'+esc(s.exercise)+'</div><div class="hs">'+esc(setsSummary(s.sets))+'</div></div>';});
+      out+='</div>';});
+    return out;
+  }
+  function historyByExercise(){
+    var names=DB.exercises.filter(function(n){return DB.sessions.some(function(s){return s.exercise===n&&s.sets.some(filled);});}).sort();
+    if(!names.length)return '<div class="empty"><span class="em-ic">📭</span>Истории пока нет.<br>Запиши первую тренировку.</div>';
+    if(!S.hex||names.indexOf(S.hex)<0)S.hex=names[0];
+    var sel='<select class="exsel" id="hsel">'+names.map(function(n){return '<option value="'+esc(n)+'"'+(n===S.hex?" selected":"")+'>'+esc(n)+'</option>';}).join("")+'</select>';
+    var ss=DB.sessions.filter(function(s){return s.exercise===S.hex&&s.sets.some(filled);}).sort(function(a,b){return a.date<b.date?-1:1;});
+    var spark="",tops=ss.map(function(s){return {d:s.date,v:topSet(s)};}).filter(function(x){return x.v!=null;});
+    if(tops.length>=2){var max=Math.max.apply(null,tops.map(function(x){return x.v;}));var min=Math.min.apply(null,tops.map(function(x){return x.v;}));var rng=max-min||1;
+      spark='<div class="spark">'+tops.map(function(x){var h=18+82*((x.v-min)/rng);return '<div class="bar" style="height:'+h+'%" title="'+esc(x.d)+': '+x.v+' кг"></div>';}).join("")+'</div>'
+        +'<div class="spark-cap">верхний рабочий вес · '+num(min)+' → '+num(max)+' кг</div>';
+    }
+    var items="";ss.slice().reverse().forEach(function(s){var t=topSet(s);
+      items+='<div class="hitem"><div class="hx" style="display:flex;justify-content:space-between;align-items:center">'
+        +'<span>'+esc(fmtShort(s.date))+' '+dt(s.date).getFullYear()+'</span>'
+        +(t!=null?'<span style="color:var(--accent);font-family:var(--mono);font-weight:800">'+num(t)+' кг</span>':'')
+        +'</div><div class="hs">'+esc(setsSummary(s.sets))+'</div></div>';});
+    return sel+spark+items;
+  }
+  function wireHistory(){
+    view.querySelectorAll(".seg button").forEach(function(b){b.addEventListener("click",function(){S.hmode=b.getAttribute("data-m");renderHistory();});});
+    var hsel=document.getElementById("hsel");if(hsel)hsel.addEventListener("change",function(){S.hex=hsel.value;renderHistory();});
+    document.getElementById("exp").addEventListener("click",function(){
+      var blob=new Blob([JSON.stringify(DB,null,2)],{type:"application/json"});
+      var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="gymlog-backup-"+todayISO()+".json";a.click();
+      setTimeout(function(){URL.revokeObjectURL(a.href);},1000);
+    });
+    var impfile=document.getElementById("impfile");
+    document.getElementById("imp").addEventListener("click",function(){impfile.click();});
+    impfile.addEventListener("change",function(){var f=impfile.files[0];if(!f)return;var rd=new FileReader();
+      rd.onload=function(){try{var d=JSON.parse(rd.result);if(!d||!Array.isArray(d.sessions))throw 0;
+        if(confirm("Заменить все текущие данные импортированными?")){DB=d;if(!Array.isArray(DB.exercises))DB.exercises=[];save();render();}}
+        catch(e){alert("Не удалось прочитать файл — это не похоже на бэкап журнала.");}impfile.value="";};
+      rd.readAsText(f);});
+  }
+
+  document.querySelectorAll(".nav button").forEach(function(b){b.addEventListener("click",function(){S.view=b.getAttribute("data-view");render();});});
+  render();
+})();
+</script>
+</body>
+</html>
