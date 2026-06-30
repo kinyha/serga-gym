@@ -44,11 +44,11 @@
   /* ---- stage / phone frame (desktop). On phones it's just full-screen ---- */
   .stage{height:100%}
   .device{height:100%}
-  .screen{position:relative;height:100dvh;height:100vh;overflow:hidden;
+  .screen{position:relative;height:100vh;height:100dvh;overflow:hidden;
     background:linear-gradient(180deg,var(--bg),var(--bg2))}
   .notch{display:none}
   .scroll{position:absolute;inset:0;overflow-y:auto;-webkit-overflow-scrolling:touch;
-    padding:calc(env(safe-area-inset-top) + 14px) 16px calc(92px + env(safe-area-inset-bottom))}
+    padding:calc(env(safe-area-inset-top) + 14px) 16px calc(150px + env(safe-area-inset-bottom))}
   .scroll::-webkit-scrollbar{width:0;height:0}
 
   @media(min-width:600px){
@@ -111,8 +111,15 @@
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .pr{font-family:var(--mono);font-weight:800;font-size:11px;color:var(--good);
     background:rgba(95,208,138,.12);border:1px solid rgba(95,208,138,.25);border-radius:999px;padding:4px 8px;white-space:nowrap}
-  .card-head .kill{flex:none;background:transparent;border:0;color:var(--ghost);font-size:17px;cursor:pointer;padding:4px 2px;line-height:1}
+  .card-head button{flex:none;background:transparent;border:0;color:var(--ghost);cursor:pointer;line-height:1}
+  .card-head .fold{width:30px;height:30px;border:1px solid var(--line-soft);border-radius:10px;font-size:18px;transition:transform .16s ease,color .16s ease,border-color .16s ease}
+  .card-head .fold:active{color:var(--accent);border-color:var(--accent)}
+  .card-head .kill{font-size:17px;padding:4px 2px}
   .card-head .kill:active{color:var(--danger)}
+  .card.collapsed{padding-bottom:12px}
+  .card.collapsed .fold{transform:rotate(-90deg)}
+  .compact{display:none;font-family:var(--mono);font-size:12px;color:var(--muted);margin-top:8px;line-height:1.45}
+  .card.collapsed .compact{display:block}
 
   .last{font-family:var(--mono);font-size:13px;color:var(--muted);margin:0 0 14px;
     padding:10px 12px;background:var(--bg2);border-radius:12px;border:1px solid var(--line-soft)}
@@ -181,6 +188,15 @@
   .tools button:active{border-color:var(--accent);color:var(--accent)}
 
   /* ---- bottom nav (anchored to phone screen) ---- */
+  .savebar{position:absolute;left:0;right:0;bottom:calc(68px + env(safe-area-inset-bottom));z-index:31;
+    padding:0 16px;pointer-events:none}
+  .savebar button{width:100%;border:0;border-radius:16px;padding:14px 16px;
+    background:linear-gradient(160deg,var(--accent-2),var(--accent-deep));color:#1b0f06;
+    font-family:var(--display);font-weight:900;font-size:15px;letter-spacing:1.2px;cursor:pointer;
+    box-shadow:0 10px 26px -10px rgba(255,122,51,.75);pointer-events:auto}
+  .savebar button:active{transform:translateY(1px)}
+  .savebar button.saved{background:linear-gradient(160deg,#FFF1E6,var(--accent));}
+
   .nav{position:absolute;left:0;right:0;bottom:0;z-index:30;
     background:linear-gradient(180deg,rgba(18,16,16,.4),rgba(18,16,16,.96));
     backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
@@ -191,6 +207,12 @@
     font-size:11px;font-weight:700;letter-spacing:.3px;cursor:pointer;padding:4px;font-family:var(--sans)}
   .nav button svg{width:23px;height:23px}
   .nav button.on{color:var(--accent)}
+
+  @media(max-width:599px){
+    .screen{position:fixed;inset:0;width:100%;height:100vh;height:100dvh}
+    .nav{position:fixed}
+    .savebar{position:fixed}
+  }
 </style>
 </head>
 <body>
@@ -203,6 +225,7 @@
     </div>
     <div id="view"></div>
   </div>
+  <div class="savebar"><button id="savebtn" type="button">Сохранить</button></div>
   <nav class="nav">
     <button id="nav-w" class="on" data-view="workout">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 7v10M17.5 7v10M3.5 9.5v5M20.5 9.5v5M6.5 12h11"/></svg>
@@ -225,12 +248,13 @@
   var WD=["вс","пн","вт","ср","чт","пт","сб"];
 
   function load(){try{var r=localStorage.getItem(KEY);if(r)return JSON.parse(r);}catch(e){}return {exercises:[],sessions:[]};}
-  function save(){try{localStorage.setItem(KEY,JSON.stringify(DB));}catch(e){}}
+  function save(){try{localStorage.setItem(KEY,JSON.stringify(DB));markSaved(false);}catch(e){}}
+  function markSaved(manual){var btn=document.getElementById("savebtn");if(!btn)return;btn.textContent=manual?"Сохранено":"Сохранить";btn.classList.toggle("saved",!!manual);if(manual){clearTimeout(markSaved.t);markSaved.t=setTimeout(function(){btn.textContent="Сохранить";btn.classList.remove("saved");},1400);}}
   var DB=load();
   if(!Array.isArray(DB.exercises))DB.exercises=[];
   if(!Array.isArray(DB.sessions))DB.sessions=[];
 
-  var S={view:"workout",date:todayISO(),hmode:"byDate",hex:""};
+  var S={view:"workout",date:todayISO(),hmode:"byDate",hex:"",collapsed:{}};
 
   function todayISO(){var d=new Date();return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate());}
   function p(n){return n<10?"0"+n:""+n;}
@@ -314,13 +338,17 @@
         +'<button class="rmset" aria-label="Убрать">×</button>'
         +'</div>';
     });
-    return '<div class="card" data-sid="'+s.id+'">'
-      +'<div class="card-head"><h2>'+esc(s.exercise)+'</h2><span class="pr" data-pr hidden></span><button class="kill" aria-label="Убрать упражнение">🗑</button></div>'
+    var collapsed=!!S.collapsed[s.id];
+    var summary=setsSummary(s.sets)||"Подходы пока не заполнены";
+    return '<div class="card'+(collapsed?' collapsed':'')+'" data-sid="'+s.id+'">'
+      +'<div class="card-head"><h2>'+esc(s.exercise)+'</h2><span class="pr" data-pr hidden></span><button class="fold" aria-label="'+(collapsed?'Развернуть упражнение':'Свернуть упражнение')+'" aria-expanded="'+(!collapsed)+'">⌄</button><button class="kill" aria-label="Убрать упражнение">🗑</button></div>'
+      +'<div class="compact">'+esc(summary)+'</div>'
+      +'<div class="card-body"'+(collapsed?' hidden':'')+'>'
       +lastHtml
       +'<div class="colhead"><span>#</span><span>Вес</span><span>Повторы</span><span></span></div>'
       +rows
       +'<button class="addset">+ подход</button>'
-      +'</div>';
+      +'</div></div>';
   }
 
   function updatePR(sid){
@@ -346,6 +374,10 @@
         var i=+row.getAttribute("data-i");if(!s.sets[i])return;
         s.sets[i][inp.getAttribute("data-f")]=inp.value;save();updatePR(s.id);
       });
+    });
+    view.querySelectorAll(".fold").forEach(function(b){
+      b.addEventListener("click",function(){var id=b.closest(".card").getAttribute("data-sid");
+        S.collapsed[id]=!S.collapsed[id];renderWorkout();});
     });
     view.querySelectorAll(".addset").forEach(function(b){
       b.addEventListener("click",function(){var s=findSession(b.closest(".card").getAttribute("data-sid"));
@@ -419,6 +451,7 @@
   }
 
   document.querySelectorAll(".nav button").forEach(function(b){b.addEventListener("click",function(){S.view=b.getAttribute("data-view");render();});});
+  document.getElementById("savebtn").addEventListener("click",function(){save();markSaved(true);});
   render();
 })();
 </script>
